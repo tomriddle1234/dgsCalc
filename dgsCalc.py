@@ -2,14 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import csv
+import collections
 
 #load csv
 
 table = []
 lectureTable = []
 
-markingDict = dict()
+markingDict = collections.OrderedDict()
 markingDict ={"全国一等奖":10,"全国二等奖":7,"全国三等奖":5,"全国优秀奖":3,"广西一等奖":5,"广西二等奖":3,"广西三等奖":1} 
+markingList = [10,7,5,3,5,3,1]
 
 def loadcsv(filename):
     with open(filename,'r') as csvfile:
@@ -23,7 +25,19 @@ def writecsv(data, filename):
     with open(filename,'w') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter='|')
         for key,value in data.items():
-            csvwriter.writerow([key,value])
+            
+            #value changed, so change output
+            if type(value) != type([]):
+                csvwriter.writerow([unicode(key,"utf-8"),value])
+            else:
+                #csvwriter doesn't support writing utf-8 in python 2.7.x
+                #rowlist = [unicode(key,"utf-8")]
+                #value = [s.encode('utf-8') for s in value if type(s) == type('')]
+                
+                #write as is
+                rowlist = [key]
+                csvwriter.writerow(rowlist+value)            
+                    
 
 def filterLectureName(element):
     """
@@ -37,6 +51,8 @@ def filterLectureName(element):
     #case like:"夏雨　高晓蝉　李珊宇　李杰　杨泽邦"
     #watch out it is not whitespace, but unicode space
     #fix: prepared a changed csv file, removed unicode space
+    #bug: if there is a space between charaters for one name, this piece will pick it as two names. TODO:fix this.
+    
     if ' ' in strTemp:
         nameArr = strTemp.split(' ')
         nameArr = filter(lambda name: name.strip(), nameArr)      
@@ -44,6 +60,9 @@ def filterLectureName(element):
     elif '/' in strTemp:
         nameArr = strTemp.split('/')
         nameArr = filter(lambda name: name.strip(), nameArr)
+    #case like only one name:
+    else:
+        nameArr = [strTemp]
     return nameArr
     
 if __name__ == "__main__":
@@ -56,33 +75,80 @@ if __name__ == "__main__":
     #start process
     
     #get all the lectures
+    #bug: there can be no lecture for one work!
+    #TODO: Fix this
     for row in table:
         namelist = ""
-        namelist += row[4]
-        namelist += ' ' + row[5]
+        if row[4].strip() != '':
+            namelist += row[4].strip()
+        if row[5].strip() != '':
+            namelist += ' ' + row[5]
         namelist = filterLectureName(namelist)
-        
         for name in namelist:
             if name not in lectureTable:
-                lectureTable.append(name)
+                if name.strip() != '':
+                    lectureTable.append(name)
     #generate mark dict for lecture   
-    lectureMark = dict()
+    lectureMark = collections.OrderedDict()
+    #[总分，全国一等奖，全国二等奖，全国三等奖，全国优秀奖，广西一等奖，广西二等奖，广西三等奖，院校,总分检验通过与否,作品总数]
     for name in lectureTable:
-        lectureMark[name] = 0
+        dataArr = [0,0,0,0,0,0,0,0,'',False,0]
+        lectureMark[name] = dataArr
         
     #fetch name according to mark
     for row in table:
         
         awardName = row[-1].strip()
+        print awardName
+
         if awardName in markingDict.keys():
             #get lecture names:
             namelist = ""
-            namelist += row[4]
-            namelist += ' ' + row[5]
+            if row[4].strip() != '':
+                namelist += row[4].strip()
+            if row[5].strip() != '':
+                namelist += ' ' + row[5]
+            print namelist
             namelist = filterLectureName(namelist)
+            print namelist
+            
+            #do not calculate no lecture
             for name in namelist:
-                #add mark to lecture
-                lectureMark[name] += markingDict[awardName] 
+                if name.strip() != '':
+                    #add mark to lecture
+                    lectureMark[name][0] += markingDict[awardName] 
+                    print markingDict[awardName]
+                    #get key list
+                    keylist = markingDict.keys()
+                    #get index in key list
+                    index = keylist.index(awardName)
+                    lectureMark[name][index+1] += 1
+                    lectureMark[name][-1] += 1
+                    #put university name in data
+                    lectureMark[name][-3] = row[6]
+        else:
+            print "Warning! Anormaly award name detected.!"
+            exit(-1)
+                
+      
+    #check if total mark is correct
+    for key,value in lectureMark.items():
+        if type(value) == type([]):
+            #calculating mark
+            rowsum = 0
+            numsum = 0
+            for i in xrange(1,len(value)-3):
+                rowsum += value[i] * markingList[i-1]
+                numsum += value[i]
+            
+            #only if total mark and total number matches, then pass
+            if rowsum == value[0] and numsum == value[-1]:
+                value[-2] = True
+            
+        
+        
+                
+                
     
     #sort marking dict and save csv
     #no need to sort

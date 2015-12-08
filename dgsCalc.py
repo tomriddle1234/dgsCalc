@@ -4,7 +4,7 @@
 import csv
 import collections
 
-#load csv
+
 
 table = []
 lectureTable = []
@@ -15,12 +15,16 @@ markingResultIndex = {"全国一等奖":0,"全国二等奖":1,"全国三等奖":
 markingList = [10,7,5,3,5,3,1]
 
 def loadcsv(filename):
+    """
+    load prepared csv file
+    """
     with open(filename,'r') as csvfile:
         csvreader = csv.reader(csvfile, delimiter='|')      
         for row in csvreader:
             table.append(row)
 def writecsv(data, filename):
     """
+    write output csvfile
     data is a dict
     """
     with open(filename,'w') as csvfile:
@@ -43,7 +47,8 @@ def writecsv(data, filename):
 
 def filterLectureName(element):
     """
-    input is cell containt, return is an array of names
+    filter lecture names.
+    input is cell content, return is an array of names
     
     this requires a prepared csv file, all the non-English symbol must be replaced, space must be whitespace, there must not be spaces in name string.
     """
@@ -74,11 +79,13 @@ if __name__ == "__main__":
     if table == []:
         print "Empty table!"
         exit(-1) ;
+        
     #start process
     
     #get all the lectures
     #bug: there can be no lecture for one work!
     #TODO: Fix this
+    #temporal solution:Just ignore empty lecture ones.
     for row in table:
         namelist = ""
         if row[4].strip() != '':
@@ -88,6 +95,7 @@ if __name__ == "__main__":
         namelist = filterLectureName(namelist)
         for name in namelist:
             if name not in lectureTable:
+                #in case no lecture filled
                 if name.strip() != '':
                     lectureTable.append(name)
     #generate mark dict for lecture   
@@ -147,14 +155,15 @@ if __name__ == "__main__":
             if rowsum == value[0] and numsum == value[-1]:
                 value[-2] = True
             
-        
+    #sort ordered dict
+    resultDict = collections.OrderedDict(sorted(lectureMark.items(), key = lambda x: x[1][0], reverse = True))
         
                 
                 
     
     #sort marking dict and save csv
     #no need to sort
-    writecsv(lectureMark,'output.csv') 
+    writecsv(resultDict,'output.csv') 
     
     
         

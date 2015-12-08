@@ -11,6 +11,7 @@ lectureTable = []
 
 markingDict = collections.OrderedDict()
 markingDict ={"全国一等奖":10,"全国二等奖":7,"全国三等奖":5,"全国优秀奖":3,"广西一等奖":5,"广西二等奖":3,"广西三等奖":1} 
+markingResultIndex = {"全国一等奖":0,"全国二等奖":1,"全国三等奖":2,"全国优秀奖":3,"广西一等奖":4,"广西二等奖":5,"广西三等奖":6} 
 markingList = [10,7,5,3,5,3,1]
 
 def loadcsv(filename):
@@ -24,6 +25,7 @@ def writecsv(data, filename):
     """
     with open(filename,'w') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter='|')
+        csvwriter.writerow(["姓名","总分","全国一等奖","全国二等奖","全国三等奖","全国优秀奖","广西一等奖","广西二等奖","广西三等奖","院校","数据检验通过与否","作品总数"])
         for key,value in data.items():
             
             #value changed, so change output
@@ -90,7 +92,7 @@ if __name__ == "__main__":
                     lectureTable.append(name)
     #generate mark dict for lecture   
     lectureMark = collections.OrderedDict()
-    #[总分，全国一等奖，全国二等奖，全国三等奖，全国优秀奖，广西一等奖，广西二等奖，广西三等奖，院校,总分检验通过与否,作品总数]
+    #[姓名，总分，全国一等奖，全国二等奖，全国三等奖，全国优秀奖，广西一等奖，广西二等奖，广西三等奖，院校,数据检验通过与否,作品总数]
     for name in lectureTable:
         dataArr = [0,0,0,0,0,0,0,0,'',False,0]
         lectureMark[name] = dataArr
@@ -99,7 +101,7 @@ if __name__ == "__main__":
     for row in table:
         
         awardName = row[-1].strip()
-        print awardName
+        #print awardName
 
         if awardName in markingDict.keys():
             #get lecture names:
@@ -108,21 +110,21 @@ if __name__ == "__main__":
                 namelist += row[4].strip()
             if row[5].strip() != '':
                 namelist += ' ' + row[5]
-            print namelist
+            #print namelist
             namelist = filterLectureName(namelist)
-            print namelist
+            #print namelist
             
             #do not calculate no lecture
             for name in namelist:
                 if name.strip() != '':
                     #add mark to lecture
                     lectureMark[name][0] += markingDict[awardName] 
-                    print markingDict[awardName]
+                    #print markingDict[awardName]
                     #get key list
                     keylist = markingDict.keys()
                     #get index in key list
                     index = keylist.index(awardName)
-                    lectureMark[name][index+1] += 1
+                    lectureMark[name][markingResultIndex[awardName]+1] += 1
                     lectureMark[name][-1] += 1
                     #put university name in data
                     lectureMark[name][-3] = row[6]

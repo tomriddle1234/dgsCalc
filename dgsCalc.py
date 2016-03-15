@@ -5,9 +5,12 @@ import csv
 import collections
 
 
-
+#input data
 table = []
+#lecture Name List
 lectureTable = []
+#university list
+universityTable = []
 
 markingDict = collections.OrderedDict()
 markingDict ={"全国一等奖":10,"全国二等奖":7,"全国三等奖":5,"全国优秀奖":3,"广西一等奖":5,"广西二等奖":3,"广西三等奖":1} 
@@ -22,19 +25,21 @@ def loadcsv(filename):
         csvreader = csv.reader(csvfile, delimiter='|')      
         for row in csvreader:
             table.append(row)
-def writecsv(data, filename):
+def writecsv(data, filename, title):
     """
     write output csvfile
     data is a dict
     """
     with open(filename,'w') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter='|')
-        csvwriter.writerow(["姓名","总分","全国一等奖","全国二等奖","全国三等奖","全国优秀奖","广西一等奖","广西二等奖","广西三等奖","院校","数据检验通过与否","作品总数"])
+        if title:
+            csvwriter.writerow(title)
         for key,value in data.items():
             
             #value changed, so change output
             if type(value) != type([]):
-                csvwriter.writerow([unicode(key,"utf-8"),value])
+                #csvwriter.writerow([unicode(key,"utf-8"),value])
+                csvwriter.writerow([key,value])
             else:
                 #csvwriter doesn't support writing utf-8 in python 2.7.x
                 #rowlist = [unicode(key,"utf-8")]
@@ -71,15 +76,11 @@ def filterLectureName(element):
     else:
         nameArr = [strTemp]
     return nameArr
-    
-if __name__ == "__main__":
 
-    loadcsv('prepared.csv')
-    
-    if table == []:
-        print "Empty table!"
-        exit(-1) ;
-        
+def getLectureList():
+    """
+    return a sorted lecture list with marking and work counts
+    """
     #start process
     
     #get all the lectures
@@ -157,13 +158,39 @@ if __name__ == "__main__":
             
     #sort ordered dict
     resultDict = collections.OrderedDict(sorted(lectureMark.items(), key = lambda x: x[1][0], reverse = True))
-        
-                
-                
+
+    return resultDict
+
+def getUniversityList():
+
+    universityDict = collections.OrderedDict()
+    #row[6] is the university name
+    for row in table:
+        universityName = row[6].strip()
+        if universityName not in universityDict.keys():
+            universityDict[universityName] = 1
+        else:
+            universityDict[universityName] += 1
+     
+    resultDict = collections.OrderedDict(sorted(universityDict.items(), key = lambda x:x[1], reverse = True))   
+    return resultDict
     
-    #sort marking dict and save csv
-    #no need to sort
-    writecsv(resultDict,'output.csv') 
+if __name__ == "__main__":
+
+    loadcsv('prepared.csv')
+    
+    if table == []:
+        print "Empty table!"
+        exit(-1) ;
+        
+    resultDict = getLectureList()
+    #write output lecture list
+    title = ["姓名","总分","全国一等奖","全国二等奖","全国三等奖","全国优秀奖","广西一等奖","广西二等奖","广西三等奖","院校","数据检验通过与否","作品总数"]
+    writecsv(resultDict,'output.csv',title) 
+    
+    title = ["院校","作品数"]
+    universityResult = getUniversityList()
+    writecsv(universityResult, 'university.csv', title)
     
     
         

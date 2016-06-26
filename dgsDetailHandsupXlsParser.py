@@ -2,6 +2,9 @@
 
 import sys,os
 import logging
+import re
+import csv
+
 
 from openpyxl import load_workbook
 
@@ -10,9 +13,20 @@ sys.setdefaultencoding('utf8')
 
 categoryList = ["平面类","视频类","动画类","互动类","广播类","策划案类","营销创客类","公益类"]
 
+categoryNoList = ['A','B','C','D','E','F','G','H']
+themeList = ["三九胃泰","洁婷","美莱医疗美容","艾丽·奥利司他胶囊","达利食品集团","vivo智能手机","普宙无人机","披萨星球","人祖山旅游景区","金薇KIVIE","北京家圆医院","哈药集团","公益命题：中国梦我的梦","娃哈哈","加乐活"]
+themeNoList = [4,5,8,12,13,1,3,6,7,9,10,14,15,11,2]
+
+uniList = []
+uniNoList = []
+
+codePattern = re.compile("^[A-H][0-1][0-9]-[2][0]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]")
+
+
 xlFilename = 'prepared2.xlsx'
 
 ### Logging
+#Function : Generate a log and report file.
 
 logging.basicConfig(filename='debug.log', level=logging.DEBUG,format='%(asctime)s %(message)s')
 
@@ -25,6 +39,37 @@ sheetNameList = wb.get_sheet_names()
 
 ws = wb.worksheets[0]
 
+csvtable = []
+
+def loadcsv(filename):
+    """
+    load prepared csv file
+    """
+    with open(filename,'r') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter='|')      
+        for row in csvreader:
+            csvtable.append(row)
+            
+def writecsv(data, filename,title=None):
+    """
+    write output csvfile
+    data is a dict
+    """
+    with open(filename,'w') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter='|')
+        if title:
+            csvwriter.writerow(title)
+        for value in data:
+                csvwriter.writerow([value])
+                          
+
+
+
+def utilIsAlphabeticalOrder(wordList):
+    for i in range(len(wordList) - 1):
+        if wordList[i] > wordList[i+1]:
+            return False
+    return True
 
 def utilGetTotalRecords(ws):
     row_count = ws.max_row
@@ -36,6 +81,9 @@ def utilGetTotalRecords(ws):
             break
         result += 1
      
+#Function : Check if the work total numbers are calculated right
+#openpyxl does not support calculate formula
+
 #    for i in range(3,row_count):     
 #        if  ws.cell(row=i,column=3).value.strip() == "作品数合计：":
 #            given = int(ws.cell(row=i,column=4).value)
@@ -166,17 +214,137 @@ def checkNewFormat(ws):
     if not result:
         outstr = ">>>此表格是旧表。<<<"
     else:
-        outstr = ">>>此表格是新表。<<<"
+        outstr = "此表格是新表。"
 
     print outstr
     logging.warning(outstr)
     
     
+
+def checkEncodedNumberFormat(ws):
+    """    
+    Function : Check if work encoded number is in right format
+    Function : Check if work category is following order. 
+    Function : Check if work encoded number is following order.
+    """    
     
+    cacheCatList = []
+    cacheThemeList = []
+    cacheUniCodeList = []
+    cacheLastCodeList = []
     
-    
-    
+    for i in range(3,3+recordsCount):     
         
+        utilCheckIfCellEmpty(ws.cell(row=i,column=4),"参赛编号",i)
+        codeStr = ws.cell(row=i,column=4).value
+        if not codePattern.match(codeStr):
+            outstr = "参赛编号：第%d排 编号格式不正确。" % i
+            print outstr
+            logging.warning(outstr)
+        
+        subCodeStrList = codeStr.split('-')
+        
+        #check first word
+        #get index of category name 
+        if ws.cell(row=i,column=2).value.strip() in categoryList:
+            catIndex = categoryList.index(ws.cell(row=i,column=2).value.strip())
+        else:
+            outstr = "参赛编号：第%d排 校验编号时发现命题类别单元不在命题类别列表中。" % i   
+            print outstr
+            logging.warning(outstr)
+        if categoryNoList[catIndex] != subCodeStrList[0][0]:
+            #print subCodeStrList[0][0]
+            outstr = "参赛编号：第%d排 编号中命题类别代码与命题类别不符。" % i   
+            print outstr
+            logging.warning(outstr)
+        #get index of theme name
+        if ws.cell(row=i,column=3).value.strip() in themeList:
+            themeIndex = themeList.index(ws.cell(row=i,column=3).value.strip())
+        else:
+            outstr = "参赛编号：第%d排 校验编号时发现命题名称单元不在命题名称列表中。" % i   
+            print outstr
+            logging.warning(outstr)
+        if themeNoList[themeIndex] != int(subCodeStrList[0][-2:]):
+            outstr = "参赛编号：第%d排 编号中命题名称代码与命题名称不符。" % i   
+            print outstr
+            logging.warning(outstr)
+            
+            
+        #TODO: check university code here
+        
+        
+        #check code wether follow order
+        
+        #put sub strings in to separated list
+        cacheCatList.append(subCodeStrList[0][0])
+        cacheThemeList.append(int(subCodeStrList[0][-2:]))
+        cacheUniCodeList.append(int(subCodeStrList[2]))
+        cacheLastCodeList.append(int(subCodeStrList[3]))
+    
+    #all cache list length must be the same, cause records count is the same    
+    assert(len(cacheCatList) == len(cacheThemeList) == len(cacheUniCodeList) == len(cacheLastCodeList) == recordsCount,"Fatal Problem on checking order or the code word. cache list lengths are not equal to record count.")
+    
+    #start check order 
+    if not utilIsAlphabeticalOrder(cacheCatList):
+        outstr = ">>>命题类别参赛编号顺序：编号中命题 类别 代码顺序不对。<<<"  
+        print outstr
+        logging.warning(outstr)
+    else:
+        for ele in sorted(set(cacheCatList)): #Unique list
+            subCacheThemeNoList = []
+            for i in range(len(cacheCatList)):
+                if cacheCatList[i] == ele: #only if category is this one
+                    subCacheThemeNoList.append(cacheThemeList[i])
+            if not utilIsAlphabeticalOrder(subCacheThemeNoList):
+                outstr = ">>>命题类别参赛编号顺序：编号命题类别 %s 后 名称 代码顺序不对。<<<" % ele
+                print outstr
+                logging.warning(outstr)
+            
+            #category code ordered, theme code ordered, now check the work number  
+            else:
+            
+                for item in sorted(set(subCacheThemeNoList)):
+                    subCacheWorkNoList = []
+                    for i in range(len(cacheCatList)):
+                        if (cacheCatList[i] == ele) and (cacheThemeList[i] == item): #only if category and theme is this
+                            subCacheWorkNoList.append(cacheLastCodeList[i])
+                        if not utilIsAlphabeticalOrder(subCacheWorkNoList):
+                            outstr = ">>>命题类别参赛编号顺序：编号命题类别 %s 名称 %s 后 作品 代码顺序不对。<<<" % (ele, item)
+                            print outstr
+                            logging.warning(outstr) 
+            
+            
+        
+        
+        
+def generateFileName(ws,filename):
+    """
+    Generate a list of filename can be used to search file
+    """
+    filenameList = []
+    for i in range(3,3+recordsCount):     
+        utilCheckIfCellEmpty(ws.cell(row=i,column=4),"参赛编号",i)
+        utilCheckIfCellEmpty(ws.cell(row=i,column=6),"系列件数",i)
+        codeStr = ws.cell(row=i,column=4).value
+        itemNoStr = ws.cell(row=i,column=6).value
+        filenameList.append(codeStr)
+        if int(itemNoStr) != 1:
+            for i in range(int(itemNoStr)):
+                filenameList.append(codeStr+'-'+str(i+1))
+    
+    print filenameList
+    
+    writecsv(filenameList,filename)
+
+    return
+    
+
+
+
+        
+    
+    
+#
     
     
     
@@ -191,6 +359,10 @@ checkTeamMemberNames(ws)
 
 checkTeacherMemberNames(ws)
 
+checkEncodedNumberFormat(ws)
+
+generateFileName(ws,"prepared_filelist.csv")
+
 logging.info('机检完毕。%s' % xlFilename)
 
 
@@ -200,25 +372,9 @@ logging.info('机检完毕。%s' % xlFilename)
 #print ws.cell(row=3,column=2).value
 
 
-#Function : Check if work category is following order. 
 
-#Function : Check if work encoded number is in right format
-
-
-
-
-
-
-
-#Function : Check if the work total numbers are calculated right
-
-
-
-#Function : Check if work encoded number is following order.
 
 #Function : Label wrong records or cells with related color
-
-#Function : Generate a log and report file.
 
 #Function : Generate a statistic table and compare it with the given statistics
 

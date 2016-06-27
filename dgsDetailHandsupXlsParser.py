@@ -23,12 +23,26 @@ uniNoList = []
 codePattern = re.compile("^[A-H][0-1][0-9]-[2][0]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]")
 
 
-xlFilename = 'prepared2.xlsx'
+import argparse
 
+parser = argparse.ArgumentParser(description='This program is to check file existence for DGS. Also generating a log file with the name of the output, end with .log ')
+parser.add_argument('-i','--input', help='xlsx file path, the detail form.', required=True)
+parser.add_argument('-o','--output', help='CSV file with a list of code of works', required=True)
+args = vars(parser.parse_args())
+
+
+#xlFilename = 'prepared2.xlsx'
+xlFilename = args['input']
+outputCodeListFile = args['output']
+logFilePath = os.path.splitext(outputCodeListFile)[0] + '.log'
+
+print "输入Excel文件绝对路径：%s" % xlFilename
+print "输出编号列表文件：%s" % outputCodeListFile
+print "记录文件: %s" % logFilePath
 ### Logging
 #Function : Generate a log and report file.
 
-logging.basicConfig(filename='debug.log', level=logging.DEBUG,format='%(asctime)s %(message)s')
+logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)s %(message)s')
 
 logging.info('开始机检。%s' % xlFilename)
 
@@ -282,7 +296,7 @@ def checkEncodedNumberFormat(ws):
         cacheLastCodeList.append(int(subCodeStrList[3]))
     
     #all cache list length must be the same, cause records count is the same    
-    assert(len(cacheCatList) == len(cacheThemeList) == len(cacheUniCodeList) == len(cacheLastCodeList) == recordsCount,"Fatal Problem on checking order or the code word. cache list lengths are not equal to record count.")
+    assert len(cacheCatList) == len(cacheThemeList) == len(cacheUniCodeList) == len(cacheLastCodeList) == recordsCount,"Fatal Problem on checking order or the code word. cache list lengths are not equal to record count."
     
     #start check order 
     if not utilIsAlphabeticalOrder(cacheCatList):
@@ -328,11 +342,11 @@ def generateFileName(ws,filename):
         codeStr = ws.cell(row=i,column=4).value
         itemNoStr = ws.cell(row=i,column=6).value
         filenameList.append(codeStr)
-        if int(itemNoStr) != 1:
+        if itemNoStr and int(itemNoStr) != 1:
             for i in range(int(itemNoStr)):
                 filenameList.append(codeStr+'-'+str(i+1))
     
-    print filenameList
+    #print filenameList
     
     writecsv(filenameList,filename)
 
@@ -343,8 +357,7 @@ def generateFileName(ws,filename):
 
         
     
-    
-#
+
     
     
     
@@ -361,7 +374,7 @@ checkTeacherMemberNames(ws)
 
 checkEncodedNumberFormat(ws)
 
-generateFileName(ws,"prepared_filelist.csv")
+generateFileName(ws,outputCodeListFile)
 
 logging.info('机检完毕。%s' % xlFilename)
 

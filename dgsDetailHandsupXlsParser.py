@@ -5,7 +5,7 @@ import sys,os
 import logging
 import re
 import csv
-
+import collections
 
 from openpyxl import load_workbook
 
@@ -42,9 +42,16 @@ print "记录文件: %s" % logFilePath
 ### Logging
 #Function : Generate a log and report file.
 
+
+
 logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)s %(message)s')
 
 logging.info('开始机检。%s' % xlFilename)
+
+if not os.path.isfile(xlFilename):
+    print "Input %s does not exist" % xlFilename
+        
+
 
 #if read only there will be bugs on loading cell values
 wb = load_workbook(xlFilename)
@@ -59,6 +66,9 @@ def loadcsv(filename):
     """
     load prepared csv file
     """
+    if not os.path.isfile(filename):
+        print "Input %s does not exist" % filename
+        return
     with open(filename,'r') as csvfile:
         csvreader = csv.reader(csvfile, delimiter='|')      
         for row in csvreader:
@@ -91,7 +101,7 @@ def utilGetTotalRecords(ws):
     valid_count = 0
     result = 0
     for i in range(3,row_count):     
-        if  ws.cell(row=i,column=1).value is None or ws.cell(row=i,column=1).value == "汇总":
+        if  ws.cell(row=i,column=2).value is None or ws.cell(row=i,column=1).value == "汇总":
             break
         result += 1
      
@@ -123,6 +133,8 @@ def utilCheckIfCellEmpty(input_cell,s,i):
         outstr = "第 %d 排 %s 是空白的。" % (i, s)
         print outstr
         logging.warning(outstr)
+        return False
+    return True
         
      
     
@@ -138,6 +150,7 @@ def checkCategoryName(ws):
     for i in range(3,3+recordsCount):     
         utilCheckIfCellEmpty(ws.cell(row=i,column=2),"命题类别",i)
         # if there is a category name not in the list log this
+        # Note there must be an end label as 汇总
         if not ws.cell(row=i,column=2).value.strip() in categoryList:
             outstr = "命题类别第 %s 排,第 %s 列不在类别名称列表中。" % (str(i),'2')
             print outstr
@@ -183,24 +196,24 @@ def checkTeacherMemberNames(ws):
     
     result = True
     for i in range(3,3+recordsCount):     
-        utilCheckIfCellEmpty(ws.cell(row=i,column=9),"指导教师",i)
+        if utilCheckIfCellEmpty(ws.cell(row=i,column=9),"指导教师",i):
         # if name contains spaces
         
-        if (u'\x20' in ws.cell(row=i,column=9).value) or (u'\u3000' in ws.cell(row=i,column=9).value):
-            outstr = "第 %d　排指导教师名称中出现空格。" % i
-            print outstr
-            logging.warning(outstr)
-            result = False
-        elif  '、' in ws.cell(row=i,column=9).value:
-            outstr = "第 %d　排指导教师名称中出现顿号。" % i
-            print outstr
-            logging.warning(outstr)
-            result = False  
-        elif not utilCheckIfAllChinese(ws.cell(row=i,column=9).value):
-            outstr = "第 %d　排指导教师名称中出现其它特殊符号。" % i
-            print outstr
-            logging.warning(outstr)
-            result = False
+            if (u'\x20' in ws.cell(row=i,column=9).value) or (u'\u3000' in ws.cell(row=i,column=9).value):
+                outstr = "第 %d　排指导教师名称中出现空格。" % i
+                print outstr
+                logging.warning(outstr)
+                result = False
+            elif  '、' in ws.cell(row=i,column=9).value:
+                outstr = "第 %d　排指导教师名称中出现顿号。" % i
+                print outstr
+                logging.warning(outstr)
+                result = False  
+            elif not utilCheckIfAllChinese(ws.cell(row=i,column=9).value):
+                outstr = "第 %d　排指导教师名称中出现其它特殊符号。" % i
+                print outstr
+                logging.warning(outstr)
+                result = False
     return result 
 
 
@@ -247,6 +260,8 @@ def checkEncodedNumberFormat(ws):
     cacheUniCodeList = []
     cacheLastCodeList = []
     
+    skipCount = 0
+    
     for i in range(3,3+recordsCount):     
         
         utilCheckIfCellEmpty(ws.cell(row=i,column=4),"参赛编号",i)
@@ -255,8 +270,12 @@ def checkEncodedNumberFormat(ws):
             outstr = "参赛编号：第%d排 编号格式不正确。" % i
             print outstr
             logging.warning(outstr)
+            skipCount += 1
+            continue
         
         subCodeStrList = codeStr.split('-')
+        
+        
         
         #check first word
         #get index of category name 
@@ -289,6 +308,12 @@ def checkEncodedNumberFormat(ws):
         
         #check code wether follow order
         
+        #if sub string number isn't right, skip this one
+        if len(subCodeStrList) != 4:
+            print "This should not happen, sub string number is incorrect."
+            continue
+            
+        
         #put sub strings in to separated list
         cacheCatList.append(subCodeStrList[0][0])
         cacheThemeList.append(int(subCodeStrList[0][-2:]))
@@ -296,7 +321,7 @@ def checkEncodedNumberFormat(ws):
         cacheLastCodeList.append(int(subCodeStrList[3]))
     
     #all cache list length must be the same, cause records count is the same    
-    assert len(cacheCatList) == len(cacheThemeList) == len(cacheUniCodeList) == len(cacheLastCodeList) == recordsCount,"Fatal Problem on checking order or the code word. cache list lengths are not equal to record count."
+    assert len(cacheCatList) == len(cacheThemeList) == len(cacheUniCodeList) == len(cacheLastCodeList) == recordsCount - skipCount,"Fatal Problem on checking order or the code word. cache list lengths are not equal to record count."
     
     #start check order 
     if not utilIsAlphabeticalOrder(cacheCatList):
@@ -346,6 +371,21 @@ def generateFileName(ws,filename):
             for i in range(int(itemNoStr)):
                 filenameList.append(codeStr+'-'+str(i+1))
     
+    
+    #Check if there is duplicated names
+    
+    dupList = [item for item, count in collections.Counter(filenameList).items() if count > 1]
+    
+    if dupList:
+        outstr = ">>>参赛编号：存在重复编号。列表如下：<<<"
+        print outstr
+        logging.warning(outstr)
+        for d in dupList:
+            logging.warning(d)
+
+    
+    
+    
     #print filenameList
     
     writecsv(filenameList,filename)
@@ -378,11 +418,6 @@ generateFileName(ws,outputCodeListFile)
 
 logging.info('机检完毕。%s' % xlFilename)
 
-
-
-#print ws['A2'].value.encode('utf8')
-
-#print ws.cell(row=3,column=2).value
 
 
 

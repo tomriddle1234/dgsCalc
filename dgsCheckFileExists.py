@@ -1,7 +1,7 @@
 # encoding=utf8
 
 #input is a csv file path, and a search target folder
-
+import fixutf8
 import sys,os
 import csv
 import logging

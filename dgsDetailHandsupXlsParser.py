@@ -1,5 +1,6 @@
 # encoding=utf8
 
+import fixutf8
 import sys,os
 import logging
 import re
@@ -8,8 +9,7 @@ import csv
 
 from openpyxl import load_workbook
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+
 
 categoryList = ["平面类","视频类","动画类","互动类","广播类","策划案类","营销创客类","公益类"]
 

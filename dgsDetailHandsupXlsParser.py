@@ -9,21 +9,11 @@ import collections
 
 from openpyxl import load_workbook
 
+import argparse
 
-
-categoryList = ["平面类","视频类","动画类","互动类","广播类","策划案类","营销创客类","公益类"]
-
-categoryNoList = ['A','B','C','D','E','F','G','H']
-themeList = ["三九胃泰","洁婷","美莱医疗美容","艾丽·奥利司他胶囊","达利食品集团","vivo智能手机","普宙无人机","披萨星球","人祖山旅游景区","金薇KIVIE","北京家圆医院","哈药集团","公益命题：中国梦我的梦","娃哈哈","加乐活"]
-themeNoList = [4,5,8,12,13,1,3,6,7,9,10,14,15,11,2]
-
-uniList = []
-uniNoList = []
+from dgsConstants import *
 
 codePattern = re.compile("^[A-H][0-1][0-9]-[2][0]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]")
-
-
-import argparse
 
 parser = argparse.ArgumentParser(description='This program is to check file existence for DGS. Also generating a log file with the name of the output, end with .log ')
 parser.add_argument('-i','--input', help='xlsx file path, the detail form.', required=True)

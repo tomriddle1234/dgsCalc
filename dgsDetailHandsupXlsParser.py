@@ -22,7 +22,7 @@ args = vars(parser.parse_args())
 
 
 #xlFilename = 'prepared2.xlsx'
-xlFilename = args['input']
+xlFilename = args['input'].encode('utf-8')
 outputCodeListFile = args['output']
 logFilePath = os.path.splitext(outputCodeListFile)[0] + '.log'
 

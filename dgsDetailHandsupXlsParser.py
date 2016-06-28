@@ -20,13 +20,17 @@ parser.add_argument('-i','--input', help='xlsx file path, the detail form.', req
 parser.add_argument('-o','--output', help='CSV file with a list of code of works', required=True)
 args = vars(parser.parse_args())
 
-
+xlFilename = args['input']
+outputxlFilename = ""
 #xlFilename = 'prepared2.xlsx'
-xlFilename = args['input'].encode('utf-8')
+if isinstance(args['input'],unicode):
+	outputxlFilename = args['input']
+else:
+	outputxlFilename = args['input'].decode('gb2312').encode('utf-8')
 outputCodeListFile = args['output']
 logFilePath = os.path.splitext(outputCodeListFile)[0] + '.log'
 
-print "输入Excel文件绝对路径：%s" % xlFilename
+print "输入Excel文件绝对路径：%s" % outputxlFilename
 print "输出编号列表文件：%s" % outputCodeListFile
 print "记录文件: %s" % logFilePath
 ### Logging
@@ -41,8 +45,6 @@ logging.info('开始机检。%s' % xlFilename)
 if not os.path.isfile(xlFilename):
     print "Input %s does not exist" % xlFilename
         
-
-
 #if read only there will be bugs on loading cell values
 wb = load_workbook(xlFilename)
 
@@ -215,6 +217,12 @@ def checkNewFormat(ws):
     """
     row_count = ws.max_row
     column_count = ws.max_column
+	
+    if not row_count or not column_count:
+		outstr = "表格空白，可能未正确打开。"
+		print outstr
+		logging.warning(outstr)
+	
     rowelements = []
     result = True
     for i in range(1,column_count):
@@ -230,6 +238,9 @@ def checkNewFormat(ws):
     
     if not result:
         outstr = ">>>此表格是旧表。<<<"
+		print rowelements
+		print row_count
+		print column_count
     else:
         outstr = "此表格是新表。"
 

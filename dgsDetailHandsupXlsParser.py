@@ -50,7 +50,14 @@ wb = load_workbook(xlFilename)
 
 sheetNameList = wb.get_sheet_names()
 
-ws = wb.worksheets[0]
+# This must find the 作品明细表
+wsIndex = sheetNameList.index("作品明细表")
+if not wsIndex:
+    outstr = "错误：xlsx文件未见 作品明细表"
+    print outstr
+    logging.warning(outstr)
+    
+ws = wb.worksheets[wsIndex]
 
 csvtable = []
 
@@ -219,9 +226,9 @@ def checkNewFormat(ws):
     column_count = ws.max_column
 	
     if not row_count or not column_count:
-		outstr = "表格空白，可能未正确打开。"
-		print outstr
-		logging.warning(outstr)
+        outstr = "表格空白，可能未正确打开。"
+        print outstr
+        logging.warning(outstr)
 	
     rowelements = []
     result = True
@@ -238,9 +245,9 @@ def checkNewFormat(ws):
     
     if not result:
         outstr = ">>>此表格是旧表。<<<"
-		print rowelements
-		print row_count
-		print column_count
+        print rowelements
+        print row_count
+        print column_count
     else:
         outstr = "此表格是新表。"
 

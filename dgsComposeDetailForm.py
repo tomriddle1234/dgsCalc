@@ -45,6 +45,10 @@ for root,dirname,filenames in os.walk(fromPath):
     for pattern in ['.xls','.xlsx']:
         for filename in fnmatch.filter(filenames,'*明细表*' + pattern):
             formFileList.append(os.path.join(root,filename))
+            outstr = "找到 %s" % formFileList[-1]
+            print outstr
+            logging.warning(outstr)
+            
 
 #Start load xlsx file with pandas
 frames = []
@@ -101,6 +105,12 @@ for xlFile in formFileList:
         print outstr
         logging.warning(outstr)
         skipCount += 1
+
+if frames == []:
+    outstr = ">>>未收集到任何表格,终止<<<"
+    print outstr
+    logging.warning(outstr)
+    sys.exit()
 
 result = pandas.concat(frames)
 writer = pandas.ExcelWriter(outputPath)

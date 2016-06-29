@@ -48,12 +48,16 @@ for root,dirname,filenames in os.walk(fromPath):
         #matchPatternStr.decode('utf-8').encode('gb2312')
         #print matchPatternStr
         for filename in filenames:
-		
-			if "明细表" in gbk2utf8(filename):
-				formFileList.append(os.path.join(root,filename))
-				outstr = "找到 %s" % gbk2utf8(formFileList[-1])
-				print outstr
-				logging.warning(outstr)
+			try:
+				if "明细表".decode('utf-8').encode('gb2312') in filename:
+					formFileList.append(os.path.join(root,filename))
+					outstr = "找到 %s" % gbk2utf8(formFileList[-1])
+					print outstr
+					logging.warning(outstr)
+			except:
+					outstr = "文件名编码问题，跳过 %s" % filename
+					print outstr
+					logging.warning(outstr)
             
 
 #Start load xlsx file with pandas
@@ -61,9 +65,17 @@ frames = []
 skipCount = 0
 for xlFile in formFileList:
     if os.path.isfile(xlFile):
-        wf = pandas.ExcelFile(xlFile)
-        ws = wf.parse("作品明细表")
-        
+        print xlFile
+        try:
+            wf = pandas.ExcelFile(xlFile)
+            ws = wf.parse("作品明细表")
+        except:
+			outstr = "Excel文件问题，跳过 %s" % xlFile
+			print outstr
+			logging.warning(outstr)
+			skipCount += 1
+			continue
+
         if ws.empty:
             outstr = ">>>未找到作品明细表 %s<<<" % xlFile
             print outstr
@@ -101,7 +113,7 @@ for xlFile in formFileList:
                         droprows.append(c)
                         finishFlag = True
         droprows = list(set(droprows))
-        print droprows
+        #print droprows
         ws.drop(ws.index[droprows],inplace=True)
         
         

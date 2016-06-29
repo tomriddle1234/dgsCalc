@@ -76,7 +76,7 @@ def loadcsv(filename):
 def writecsv(data, filename,title=None):
     """
     write output csvfile
-    data is a dict
+    data is a list
     """
     with open(filename,'w') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter='|')

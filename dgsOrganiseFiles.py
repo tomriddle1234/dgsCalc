@@ -31,6 +31,18 @@ def loadcsv(filename):
         for row in csvreader:
             csvtable.append(row)
 
+def writecsv(data, filename,title=None):
+    """
+    write output csvfile
+    data is a list
+    """
+    with open(filename,'w') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter='|')
+        if title:
+            csvwriter.writerow(title)
+        for value in data:
+                csvwriter.writerow([value])
+
 parser = argparse.ArgumentParser(description='This program is to move files from target folder to organised folders. ')
 parser.add_argument('-i','--input', help='CSV file path contains list of abs file path.', required=True)
 parser.add_argument('-fp','--frompath', help='From path contains original files need to be moved.', required=True )
@@ -53,6 +65,10 @@ if not inputCSVPath or not fromPath or not targetPath:
 logFilePath = os.path.join(targetPath,'move.log')
 print "记录文件: %s" % logFilePath
 
+errorFilePath = os.path.join(targetPath,'error.csv')
+print "错误文件：%s" % errorFilePath
+
+errorList = []
 
 logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)s %(message)s')
 
@@ -64,6 +80,9 @@ loadcsv(inputCSVPath)
 #Base on the code, send the files to separated folders.
 # 命题类别/命题名称/命题文件
 
+#Put all Problemetic files in a list csv file
+
+
 skipCount = 0
 count = 0
 for abspath in csvtable:
@@ -71,15 +90,27 @@ for abspath in csvtable:
     #Check code.
     codename = os.path.splitext(os.path.basename(abspath))[0]
     extname = os.path.splitext(os.path.basename(abspath))[-1]
+    
+    #Check if the extension is wrong.
+    if os.path.basename(abspath) != codename + extname:
+        outstr = ">>>文件扩展名异常,不搬运。%s<<<" % abspath
+        print outstr
+        logging.warning(outstr)
+        skipCount += 1
+        errorList.append(abspath)
+        continue
+    
     #jump out pdf files
     if extname == ".pdf" or extname == ".PDF":
         print "跳过PDF文件：%s" % abspath
+        continue
     
     if not codePattern.match(codename):
         outstr = "文件编号格式不正确,不搬运。%s" % abspath
         print outstr
         logging.warning(outstr)
         skipCount += 1
+        errorList.append(abspath)
         continue
     
     subCodeStrList = codename.split('-')
@@ -95,12 +126,14 @@ for abspath in csvtable:
         print outstr
         logging.warning(outstr)
         skipCount += 1
+        errorList.append(abspath)
         continue
     elif not themeStr in themeNoList:
         outstr = "命题名称代码不再池中,不搬运。%s" % themeStr
         print outstr
         logging.warning(outstr)
         skipCount += 1
+        errorList.append(abspath)
         continue
     else:
         targetCategoryDirStr = os.path.join(targetPath,categoryList[categoryNoList.index(firstSubStr)])
@@ -114,6 +147,7 @@ for abspath in csvtable:
                 print outstr
                 logging.warning(outstr)
                 skipCount += 1
+                errorList.append(abspath)
                 continue
         targetThemeDirStr = os.path.join(targetCategoryDirStr, themeList[themeNoList.index(int(themeStr))])
         if not os.path.isdir(targetThemeDirStr):
@@ -124,6 +158,7 @@ for abspath in csvtable:
                 print outstr
                 logging.warning(outstr)
                 skipCount += 1
+                errorList.append(abspath)
                 continue
         # Move file
         try:
@@ -133,11 +168,13 @@ for abspath in csvtable:
             print outstr
             logging.warning(outstr)
             skipCount += 1
+            errorList.append(abspath)
             continue
         
     count += 1
         
-        
+#Write out error list
+writecsv(errorList,errorFilePath)
      
 outstr = "输入文件总数 %d 跳过文件总数 %d" % (count, skipCount)
 print outstr

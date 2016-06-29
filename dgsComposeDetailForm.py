@@ -43,7 +43,7 @@ logging.info('开始组合明细表。')
 formFileList = [] 
 for root,dirname,filenames in os.walk(fromPath):
     for pattern in ['.xls','.xlsx']:
-        for filename in fnmatch.filter(filenames,'*明细表*' + pattern):
+        for filename in fnmatch.filter(filenames,utf82gbk('*明细表*' + pattern)):
             formFileList.append(os.path.join(root,filename))
             outstr = "找到 %s" % formFileList[-1]
             print outstr

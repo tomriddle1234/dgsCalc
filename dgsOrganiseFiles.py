@@ -13,9 +13,6 @@ import shutil
 from dgsConstants import *
 from dgsUtil import *
 
-#load csv file 
-csvtable = []
-
 codePattern = re.compile("^[A-H][0-1][0-9]-[2][0]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]")
 
 

@@ -58,11 +58,7 @@ if wsIndex == None:
     logging.warning(outstr)
     
 ws = wb.worksheets[wsIndex]
-
-csvtable = []
-
               
-
 def utilIsAlphabeticalOrder(wordList):
     for i in range(len(wordList) - 1):
         if wordList[i] > wordList[i+1]:

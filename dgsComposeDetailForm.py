@@ -42,22 +42,22 @@ logging.info('开始组合明细表。')
 #Create file list
 formFileList = [] 
 for root,dirname,filenames in os.walk(fromPath):
-    for pattern in ['.xls','.xlsx']:
-        #print filenames
-        #matchPatternStr = '*明细表*' + pattern
-        #matchPatternStr.decode('utf-8').encode('gb2312')
-        #print matchPatternStr
-        for filename in filenames:
-			try:
-				if "明细表".decode('utf-8').encode('gb2312') in filename:
-					formFileList.append(os.path.join(root,filename))
-					outstr = "找到 %s" % gbk2utf8(formFileList[-1])
-					print outstr
-					logging.warning(outstr)
-			except:
-					outstr = "文件名编码问题，跳过 %s" % filename
-					print outstr
-					logging.warning(outstr)
+	#print filenames
+	#matchPatternStr = '*明细表*' + pattern
+	#matchPatternStr.decode('utf-8').encode('gb2312')
+	#print matchPatternStr
+	for filename in filenames:
+		try:
+			if ("明细表".decode('utf-8').encode('gb2312') in filename) and (filename.endswith('.xls') or
+				filename.endswith('.xlsx')):
+				formFileList.append(os.path.join(root,filename))
+				outstr = "找到 %s" % gbk2utf8(formFileList[-1])
+				print outstr
+				logging.warning(outstr)
+		except:
+				outstr = "文件名编码问题，跳过 %s" % filename
+				print outstr
+				logging.warning(outstr)
             
 
 #Start load xlsx file with pandas
@@ -65,7 +65,7 @@ frames = []
 skipCount = 0
 for xlFile in formFileList:
     if os.path.isfile(xlFile):
-        print xlFile
+        #print xlFile
         try:
             wf = pandas.ExcelFile(xlFile)
             ws = wf.parse("作品明细表")
@@ -77,7 +77,7 @@ for xlFile in formFileList:
 			continue
 
         if ws.empty:
-            outstr = ">>>未找到作品明细表 %s<<<" % xlFile
+            outstr = ">>>未找到作品明细表 %s<<<" % gbk2utf8(xlFile)
             print outstr
             logging.warning(outstr)
             skipCount += 1
@@ -116,13 +116,16 @@ for xlFile in formFileList:
         #print droprows
         ws.drop(ws.index[droprows],inplace=True)
         
-        
         frames.append(ws)
     else:
         outstr = ">>>文件不存在 %s<<<" % xlFile
         print outstr
         logging.warning(outstr)
         skipCount += 1
+		
+outstr = "合并完毕，现在输出"
+print outstr 
+logging.info(outstr)
 
 if frames == []:
     outstr = ">>>未收集到任何表格,终止<<<"
@@ -130,7 +133,7 @@ if frames == []:
     logging.warning(outstr)
     sys.exit()
 
-result = pandas.concat(frames)
+result = pandas.concat(frames,ignore_index=True)
 writer = pandas.ExcelWriter(outputPath)
 result.to_excel(writer,u"作品明细表")
 writer.save()

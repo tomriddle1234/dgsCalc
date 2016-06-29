@@ -37,8 +37,6 @@ logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)
 
 logging.info('开始检查文件。')
 
-csvtable = []
-
 outputFileList = []
 missingFileList = []
 
@@ -84,7 +82,6 @@ writecsv(outputFileList, outputFileListPath)
 #write out missingFileList
 writecsv(missingFileList, missingFilePath)
    
-raw_input("按任意键退出")
 
 
 

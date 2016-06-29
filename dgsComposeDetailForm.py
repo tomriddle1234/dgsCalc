@@ -4,7 +4,6 @@
 
 import fixutf8
 import sys,os
-import csv
 import logging
 import fnmatch
 import argparse

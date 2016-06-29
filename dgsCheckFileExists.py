@@ -3,7 +3,6 @@
 #input is a csv file path, and a search target folder
 import fixutf8
 import sys,os
-import csv
 import logging
 import fnmatch
 import argparse
@@ -43,35 +42,6 @@ csvtable = []
 outputFileList = []
 missingFileList = []
 
-
-
-
-
-#load csv file 
-
-def loadcsv(filename):
-    """
-    load prepared csv file
-    """
-    if not os.path.isfile(filename):
-        print "Input %s does not exist" % filename
-        return
-    with open(filename,'r') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter='|')      
-        for row in csvreader:
-            csvtable.append(row)
-            
-def writecsv(data, filename,title=None):
-    """
-    write output csvfile
-    data is a dict
-    """
-    with open(filename,'w') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter='|')
-        if title:
-            csvwriter.writerow(title)
-        for value in data:
-                csvwriter.writerow([value])
 
 
 loadcsv(inputCSVPath)

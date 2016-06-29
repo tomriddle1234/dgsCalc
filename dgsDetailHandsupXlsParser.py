@@ -4,7 +4,6 @@ import fixutf8
 import sys,os
 import logging
 import re
-import csv
 import collections
 
 from openpyxl import load_workbook
@@ -12,6 +11,7 @@ from openpyxl import load_workbook
 import argparse
 
 from dgsConstants import *
+from dgsUtil import *
 
 codePattern = re.compile("^[A-H][0-1][0-9]-[2][0]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]")
 
@@ -40,7 +40,7 @@ print "记录文件: %s" % logFilePath
 
 logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)s %(message)s')
 
-logging.info('开始机检。%s' % xlFilename)
+logging.info('开始机检。%s' % gbk2utf8(xlFilename))
 
 if not os.path.isfile(xlFilename):
     print "Input %s does not exist" % xlFilename
@@ -52,7 +52,7 @@ sheetNameList = wb.get_sheet_names()
 
 # This must find the 作品明细表
 wsIndex = sheetNameList.index("作品明细表")
-if not wsIndex:
+if wsIndex == None:
     outstr = "错误：xlsx文件未见 作品明细表"
     print outstr
     logging.warning(outstr)
@@ -61,32 +61,7 @@ ws = wb.worksheets[wsIndex]
 
 csvtable = []
 
-def loadcsv(filename):
-    """
-    load prepared csv file
-    """
-    if not os.path.isfile(filename):
-        print "Input %s does not exist" % filename
-        return
-    with open(filename,'r') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter='|')      
-        for row in csvreader:
-            csvtable.append(row)
-            
-def writecsv(data, filename,title=None):
-    """
-    write output csvfile
-    data is a list
-    """
-    with open(filename,'w') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter='|')
-        if title:
-            csvwriter.writerow(title)
-        for value in data:
-                csvwriter.writerow([value])
-                          
-
-
+              
 
 def utilIsAlphabeticalOrder(wordList):
     for i in range(len(wordList) - 1):
@@ -424,7 +399,7 @@ checkEncodedNumberFormat(ws)
 
 generateFileName(ws,outputCodeListFile)
 
-logging.info('机检完毕。%s' % xlFilename)
+logging.info('机检完毕。%s' % gbk2utf8(xlFilename))
 
 
 

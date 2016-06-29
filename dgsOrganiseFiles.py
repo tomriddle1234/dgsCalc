@@ -4,7 +4,6 @@
 
 import fixutf8
 import sys,os
-import csv
 import logging
 import fnmatch
 import argparse
@@ -19,29 +18,6 @@ csvtable = []
 
 codePattern = re.compile("^[A-H][0-1][0-9]-[2][0]-[0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]")
 
-def loadcsv(filename):
-    """
-    load prepared csv file
-    """
-    if not os.path.isfile(filename):
-        print "Input %s does not exist" % filename
-        return
-    with open(filename,'r') as csvfile:
-        csvreader = csv.reader(csvfile, delimiter='|')      
-        for row in csvreader:
-            csvtable.append(row)
-
-def writecsv(data, filename,title=None):
-    """
-    write output csvfile
-    data is a list
-    """
-    with open(filename,'w') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter='|')
-        if title:
-            csvwriter.writerow(title)
-        for value in data:
-                csvwriter.writerow([value])
 
 parser = argparse.ArgumentParser(description='This program is to move files from target folder to organised folders. ')
 parser.add_argument('-i','--input', help='CSV file path contains list of abs file path.', required=True)

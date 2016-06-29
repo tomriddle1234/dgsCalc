@@ -388,15 +388,25 @@ def generateFileName(ws,filename):
 #Test
 
 checkNewFormat(ws)
-
+logging.info("")
+logging.info("########################")
+logging.info("")
 checkCategoryName(ws)
-
+logging.info("")
+logging.info("########################")
+logging.info("")
 checkTeamMemberNames(ws)
-
+logging.info("")
+logging.info("########################")
+logging.info("")
 checkTeacherMemberNames(ws)
-
+logging.info("")
+logging.info("########################")
+logging.info("")
 checkEncodedNumberFormat(ws)
-
+logging.info("")
+logging.info("########################")
+logging.info("")
 generateFileName(ws,outputCodeListFile)
 
 logging.info('机检完毕。%s' % gbk2utf8(xlFilename))

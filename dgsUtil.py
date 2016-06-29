@@ -1,5 +1,6 @@
 # encoding=utf8
 import csv
+import os
 def loadcsv(filename):
     """
     load prepared csv file

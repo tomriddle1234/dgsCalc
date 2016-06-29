@@ -12,7 +12,7 @@ import collections
 import re
 import shutil
 from dgsConstants import *
-
+from dgsUtil import *
 
 #load csv file 
 csvtable = []
@@ -53,9 +53,9 @@ inputCSVPath = args['input']
 fromPath = args['frompath']
 targetPath = args['targetpath']
 
-print "输入文件绝对路径列表：%s" % inputCSVPath
-print "来源文件夹：%s" % fromPath
-print "目标文件夹：%s" % targetPath
+print "输入文件绝对路径列表：%s" % gbk2utf8(inputCSVPath)
+print "来源文件夹：%s" % gbk2utf8(fromPath)
+print "目标文件夹：%s" % gbk2utf8(targetPath)
 
 print "##########################"
 
@@ -63,10 +63,10 @@ if not inputCSVPath or not fromPath or not targetPath:
     print "Input argument Error."
 
 logFilePath = os.path.join(targetPath,'move.log')
-print "记录文件: %s" % logFilePath
+print "记录文件: %s" % gbk2utf8(logFilePath)
 
 errorFilePath = os.path.join(targetPath,'error.csv')
-print "错误文件：%s" % errorFilePath
+print "错误文件：%s" % gbk2utf8(errorFilePath)
 
 errorList = []
 

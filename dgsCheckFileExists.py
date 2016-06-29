@@ -8,6 +8,7 @@ import logging
 import fnmatch
 import argparse
 import collections
+from dgsUtil import *
 
 parser = argparse.ArgumentParser(description='This program is to check file existence for DGS. Also generating a log file with the name of the output, end with .log ')
 parser.add_argument('-i','--input', help='CSV file path contains list of code of works.', required=True)
@@ -19,9 +20,9 @@ inputCSVPath = args['input']
 outputFileListPath = args['output']
 targetPath = args['targetpath']
 
-print "输入编号列表：%s" % inputCSVPath
-print "输出文件绝对路径列表：%s" % outputFileListPath
-print "检测目标文件夹：%s" % targetPath
+print "输入编号列表：%s" % gbk2utf8(inputCSVPath)
+print "输出文件绝对路径列表：%s" % gbk2utf8(outputFileListPath)
+print "检测目标文件夹：%s" % gbk2utf8(targetPath)
 
 print "##########################"
 
@@ -29,9 +30,9 @@ if not inputCSVPath or not outputFileListPath or not targetPath:
     print "Input argument Error."
 
 logFilePath = os.path.splitext(outputFileListPath)[0] + '.log'
-print "记录文件: %s" % logFilePath
+print "记录文件: %s" % gbk2utf8(logFilePath)
 missingFilePath = os.path.splitext(outputFileListPath)[0]+'_missing.csv'
-print "丢失文件列表: %s" % missingFilePath
+print "丢失文件列表: %s" % gbk2utf8(missingFilePath)
 
 logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)s %(message)s')
 

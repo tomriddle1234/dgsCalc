@@ -13,19 +13,19 @@ import re
 import shutil
 import pandas
 from dgsConstants import *
-
+from dgsUtil import *
 
 
 parser = argparse.ArgumentParser(description='This program is to fetch all detail xlsx file to compose a single big one. ')
 parser.add_argument('-fp','--frompath', help='From path contains original files need to be moved.', required=True )
-parser.add_argument('-o','--output', help='Output big file path.', required=True )
+parser.add_argument('-o','--output', help='Output big table file path.', required=True )
 args = vars(parser.parse_args())
 
 fromPath = args['frompath']
 outputPath = args['output']
 
-print "来源文件夹：%s" % fromPath
-print "目标明细表文件：%s" % outputPath
+print "来源文件夹：%s" % gbk2utf8(fromPath)
+print "目标明细表文件：%s" % gbk2utf8(outputPath)
 
 print "##########################"
 
@@ -33,7 +33,7 @@ if not fromPath or not outputPath:
     print "Input argument Error."
 
 logFilePath = os.path.splitext(outputPath)[0] + '.log'
-print "记录文件: %s" % logFilePath
+print "记录文件: %s" % gbk2utf8(logFilePath)
 
 
 logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)s %(message)s')

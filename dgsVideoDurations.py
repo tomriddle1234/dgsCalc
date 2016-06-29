@@ -9,6 +9,17 @@ import argparse
 import collections
 from dgsUtil import *
 
+import subprocess
+
+def getLength(filename):
+	result = subprocess.Popen(["ffprobe", "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 %s" % filename],
+	stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+	number = result.stdout.readline()
+	if number:
+		return float(number)
+	else:
+		return 0.0
+
 parser = argparse.ArgumentParser(description='This program is to check file existence for DGS. Also generating a log file with the name of the output, end with .log ')
 parser.add_argument('-i','--input', help='Total CSV file path.', required=True)
 parser.add_argument('-o','--output', help='Video CSV file list.', required=True)
@@ -66,7 +77,17 @@ for ele in csvtable:
 
 writecsv(videoFileList, outputVideoFileListPath)
 
-
+#Now start to check duration
+#ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 <>
+timeSum = 0.0
+fileCount = 0
+for videoFile in videoFileList:
+	if os.path.isfile(videoFile):
+		fileDuration = getLength(videoFile)
+		timeSum += fileDuration
+		fileCount += 1
+		
+logging.info("播放总时间 %s, 可播放文件数 %d") % (timeSum,fileCount)
 
 
 

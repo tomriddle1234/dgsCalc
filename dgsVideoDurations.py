@@ -8,36 +8,54 @@ import fnmatch
 import argparse
 import collections
 from dgsUtil import *
-
+import re
 import subprocess
 
-def getLength(filename):
-	result = subprocess.Popen(["ffprobe", "-v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 %s" % filename],
-	stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
-	number = result.stdout.readline()
-	if number:
-		return float(number)
-	else:
-		return 0.0
+
 
 parser = argparse.ArgumentParser(description='This program is to check file existence for DGS. Also generating a log file with the name of the output, end with .log ')
 parser.add_argument('-i','--input', help='Total CSV file path.', required=True)
-parser.add_argument('-o','--output', help='Video CSV file list.', required=True)
+parser.add_argument('-o','--output', help=' Video CSV file list.', required=True)
 args = vars(parser.parse_args())
 
 inputCSVPath = args['input']
 outputVideoFileListPath = args['output']
+outputVideoProblemFileListPath = ""
 
 print "输入编号列表：%s" % gbk2utf8(inputCSVPath)
 print "输出文件绝对路径列表：%s" % gbk2utf8(outputVideoFileListPath)
 
 print "##########################"
 
+problemList = []
+def getLength(filename):
+	try:
+		number = subprocess.check_output("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"%s\"" % filename ,shell=True).strip()
+	except:
+		print "Execute Problem."
+		problemList.append(filename)
+		return 0.0
+	if re.match("^\d+?\.\d+?$", number) is None:
+		print number
+		print "Not float"
+		problemList.append(filename)
+		return 0.0
+	if number:
+		print number
+		return float(number)
+	else:
+		problemList.append(filename)
+		return 0.0
+
+
 if not inputCSVPath or not outputVideoFileListPath:
     print "Input argument Error."
 
 logFilePath = os.path.splitext(outputVideoFileListPath)[0] + '.log'
 print "记录文件: %s" % gbk2utf8(logFilePath)
+
+outputVideoProblemFileListPath = os.path.splitext(outputVideoFileListPath)[0] + '_problem.csv'
+print "问题文件: %s" % gbk2utf8(outputVideoProblemFileListPath)
 
 logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)s %(message)s')
 
@@ -76,18 +94,22 @@ for ele in csvtable:
 #write out csv file
 
 writecsv(videoFileList, outputVideoFileListPath)
+writecsv(problemList,outputVideoProblemFileListPath)
 
 #Now start to check duration
 #ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 <>
 timeSum = 0.0
 fileCount = 0
 for videoFile in videoFileList:
-	if os.path.isfile(videoFile):
+	if os.path.isfile(videoFile): #whatif file is missing
 		fileDuration = getLength(videoFile)
 		timeSum += fileDuration
-		fileCount += 1
-		
-logging.info("播放总时间 %s, 可播放文件数 %d") % (timeSum,fileCount)
+		if fileDuration != 0.0:
+			fileCount += 1
+print timeSum
+#As of 2016-06-30 result is around 18.5hours
+#logging.info("播放总时间 %s, 可播放文件数 %d") % (str(timeSum),fileCount)
+#write problem list
 
 
 

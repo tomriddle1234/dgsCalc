@@ -344,7 +344,7 @@ def generateFileName(ws,filename):
         utilCheckIfCellEmpty(ws.cell(row=i,column=4),"参赛编号",i)
         utilCheckIfCellEmpty(ws.cell(row=i,column=6),"系列件数",i)
         codeStr = ws.cell(row=i,column=4).value.strip()
-        itemNoStr = ws.cell(row=i,column=6).value.strip()
+        itemNoStr = ws.cell(row=i,column=6).value
         filenameList.append(codeStr)
         if itemNoStr and int(itemNoStr) != 1:
             for j in range(int(itemNoStr)):

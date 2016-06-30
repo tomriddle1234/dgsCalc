@@ -42,22 +42,22 @@ logging.info('开始组合明细表。')
 #Create file list
 formFileList = [] 
 for root,dirname,filenames in os.walk(fromPath):
-	#print filenames
-	#matchPatternStr = '*明细表*' + pattern
-	#matchPatternStr.decode('utf-8').encode('gb2312')
-	#print matchPatternStr
-	for filename in filenames:
-		try:
-			if ("明细表".decode('utf-8').encode('gb2312') in filename) and (filename.endswith('.xls') or
-				filename.endswith('.xlsx')):
-				formFileList.append(os.path.join(root,filename))
-				outstr = "找到 %s" % gbk2utf8(formFileList[-1])
-				print outstr
-				logging.warning(outstr)
-		except:
-				outstr = "文件名编码问题，跳过 %s" % filename
-				print outstr
-				logging.warning(outstr)
+    #print filenames
+    #matchPatternStr = '*明细表*' + pattern
+    #matchPatternStr.decode('utf-8').encode('gb2312')
+    #print matchPatternStr
+    for filename in filenames:
+        try:
+            if ("明细表".decode('utf-8').encode('gb2312') in filename) and (filename.endswith('.xls') or
+                filename.endswith('.xlsx')):
+                formFileList.append(os.path.join(root,filename))
+                outstr = "找到 %s" % gbk2utf8(formFileList[-1])
+                print outstr
+                logging.warning(outstr)
+        except:
+                outstr = "文件名编码问题，跳过 %s" % filename
+                print outstr
+                logging.warning(outstr)
             
 
 #Start load xlsx file with pandas
@@ -70,11 +70,11 @@ for xlFile in formFileList:
             wf = pandas.ExcelFile(xlFile)
             ws = wf.parse("作品明细表")
         except:
-			outstr = "Excel文件问题，跳过 %s" % xlFile
-			print outstr
-			logging.warning(outstr)
-			skipCount += 1
-			continue
+            outstr = "Excel文件问题，跳过 %s" % xlFile
+            print outstr
+            logging.warning(outstr)
+            skipCount += 1
+            continue
 
         if ws.empty:
             outstr = ">>>未找到作品明细表 %s<<<" % gbk2utf8(xlFile)
@@ -105,16 +105,23 @@ for xlFile in formFileList:
         #now have to drop last indecies, and the first one, cause it's the column name
         droprows = [0]
         finishFlag = False 
+        #print ws
         for index, row in ws.iterrows():
             if not finishFlag:
-                if pandas.isnull(row[0]) or row[0] == "汇总":
-                    #from this index to the last
-                    for c in range(index, ws.shape[0]):
-                        droprows.append(c)
-                        finishFlag = True
+                if not all(pandas.isnull(row.index)) and not row.empty: 
+                    if pandas.isnull(row[0]) or row[0] == "汇总":
+                        #from this index to the last
+                        for c in range(index, ws.shape[0]):
+                            droprows.append(c)
+                            finishFlag = True
+                else:
+                    #if till end row is empty, we shut the loop down
+                    finishFlag = True
+                    
         droprows = list(set(droprows))
         #print droprows
-        ws.drop(ws.index[droprows],inplace=True)
+        if droprows != []:
+            ws.drop(ws.index[droprows],inplace=True)
         
         frames.append(ws)
     else:
@@ -122,7 +129,7 @@ for xlFile in formFileList:
         print outstr
         logging.warning(outstr)
         skipCount += 1
-		
+        
 outstr = "合并完毕，现在输出"
 print outstr 
 logging.info(outstr)

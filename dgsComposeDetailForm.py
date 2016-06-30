@@ -134,6 +134,14 @@ if frames == []:
     sys.exit()
 
 result = pandas.concat(frames,ignore_index=True)
+
+#reorder the column
+#print result.columns
+important = [u"命题类别",u"命题名称",u"参赛编号",u"作品名称",u"学校"]
+reordered = important + [c for c in result.columns if c not in important]
+#print reordered
+result = result[reordered]
+
 writer = pandas.ExcelWriter(outputPath)
 result.to_excel(writer,u"作品明细表")
 writer.save()

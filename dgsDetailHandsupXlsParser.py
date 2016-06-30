@@ -343,12 +343,12 @@ def generateFileName(ws,filename):
     for i in range(3,3+recordsCount):     
         utilCheckIfCellEmpty(ws.cell(row=i,column=4),"参赛编号",i)
         utilCheckIfCellEmpty(ws.cell(row=i,column=6),"系列件数",i)
-        codeStr = ws.cell(row=i,column=4).value
-        itemNoStr = ws.cell(row=i,column=6).value
+        codeStr = ws.cell(row=i,column=4).value.strip()
+        itemNoStr = ws.cell(row=i,column=6).value.strip()
         filenameList.append(codeStr)
         if itemNoStr and int(itemNoStr) != 1:
-            for i in range(int(itemNoStr)):
-                filenameList.append(codeStr+'-'+str(i+1))
+            for j in range(int(itemNoStr)):
+                filenameList.append(codeStr+'-'+str(j+1))
     
     
     #Check if there is duplicated names

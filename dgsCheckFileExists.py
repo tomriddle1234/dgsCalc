@@ -46,14 +46,14 @@ loadcsv(inputCSVPath)
 
 for ele in csvtable:
     matches = []
-    print "正在查找 %s" % ele[0]
+    print "正在查找 %s" % ele[0].strip()
     for root,dirname,filenames in os.walk(targetPath):
-        for filename in fnmatch.filter(filenames,ele[0]+'*.*'):
+        for filename in fnmatch.filter(filenames,ele[0].strip()+'*.*'):
             matches.append(os.path.join(root,filename))
     if not matches:
         #Output to missing list
-        missingFileList.append(ele[0])
-        outstr = "文件不存在：编号 %s 未找到任何文件。" % ele[0]
+        missingFileList.append(ele[0].strip())
+        outstr = "文件不存在：编号 %s 未找到任何文件。" % ele[0].strip()
         print outstr
         logging.warning(outstr)
     else:

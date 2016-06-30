@@ -88,10 +88,11 @@ for ele in csvtable:
         continue
     videoFileList.append(filepath)
 
-
+	
 encodeRandomList = random.sample(range(len(videoFileList)), len(videoFileList))
 
 categoryTable = [5,6,1,2,4,3,8,7,10,9,13,12,11,15,14]
+encodeSeriesCache = ""
 #Now start to check duration
 for videofile in videoFileList:
     #get file basename.
@@ -101,18 +102,22 @@ for videofile in videoFileList:
     #2010001a
     encodeList = []
     print substrList
-    if substrList[0][0] == "B":
+    if substrList[0][0] == "B" or substrList[0][0] == "b":
         encodeList.append('2')
     if int(substrList[0][-2:]):
         encodeList.append(str(categoryTable[int(substrList[0][-2:])-1]).zfill(2))
-    encodeList.append(str(encodeRandomList[videoFileList.index(videofile)]).zfill(4))
-    #series data
+    
+	
+	#Here we have to manually change the series files
+	encodeList.append(str(encodeRandomList[videoFileList.index(videofile)]).zfill(4))
+    
+	#series data
     sublistCount = len(substrList)
     if (sublistCount == 5):
 		#check if last records is a series work
 		if codeTable[-1] and encodeList[-1]:
-			if (len(codeTable[-1]) == 5):
-				encodeList[-1] = codeTable[-1][-2]
+			if (len(codeTable[-1][0].split('-')) == 5):
+				encodeList[-1] = codeTable[-1][1][3:-1]
 		if (substrList[-1] != '' and substrList[-1] != ' ' and substrList[-1].isdigit()):
 			if (int(substrList[-1]) == 1):
 				encodeList.append('a')

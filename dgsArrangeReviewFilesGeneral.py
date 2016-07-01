@@ -45,7 +45,7 @@ logging.basicConfig(filename=logFilePath, level=logging.DEBUG,format='%(asctime)
 
 logging.info('开始分析文件。')
 
-videoFileList = []
+generalFileList = []
 codeTable = []
 
 #list target folder files 
@@ -62,39 +62,23 @@ for dirname, dirnames, filenames in os.walk(loadPath):
 
 for ele in csvtable:
     filepath = ele
-    if filepath.endswith('.pdf') or \
-        filepath.endswith('.PDF') or \
-        filepath.endswith('.mp3') or \
-        filepath.endswith('.fla') or \
-        filepath.endswith('.jpg') or \
-        filepath.endswith('.doc') or \
-        filepath.endswith('.docx') or \
-        filepath.endswith('.docm') or \
-        filepath.endswith('.DOCM') or \
-        filepath.endswith('.rar') or \
+    if  filepath.endswith('.rar') or \
         filepath.endswith('.RAR') or \
-        filepath.endswith('.JPG') or \
-        filepath.endswith('.DOC') or \
-        filepath.endswith('.DOCX') or \
-        filepath.endswith('.PPT') or \
-        filepath.endswith('.PPTX') or \
-        filepath.endswith('.ppt') or \
-        filepath.endswith('.txt') or \
         filepath.endswith('.zip') or \
-        filepath.endswith('.ZIP') or \
-        filepath.endswith('.pptx'):
+        filepath.endswith('.ZIP'):
         continue
-    videoFileList.append(filepath)
+    generalFileList.append(filepath)
 
 	
-encodeRandomList = random.sample(range(len(videoFileList)), len(videoFileList))
+encodeRandomList = random.sample(range(len(generalFileList)), len(generalFileList))
 
 categoryTable = [5,6,1,2,4,3,8,7,10,9,13,12,11,15,14]
 encodeSeriesCache = ""
 #Now start to check duration
-for videofile in videoFileList:
+for videofile in generalFileList:
     #get file basename.
     filebasename = os.path.splitext(os.path.basename(videofile))[0].strip()
+	extname = os.path.splitext(os.path.basename(videofile))[-1].strip()
     substrList = filebasename.split('-')
     #no series data
     #2010001a
@@ -102,20 +86,49 @@ for videofile in videoFileList:
     print substrList
     if substrList[0][0] == "B" or substrList[0][0] == "b":
         encodeList.append('2')
+	if substrList[0][0] == "A" or substrList[0][0] == "a":
+        encodeList.append('1')
+	if substrList[0][0] == "C" or substrList[0][0] == "c":
+        encodeList.append('3')
+	if substrList[0][0] == "D" or substrList[0][0] == "d":
+        encodeList.append('4')
+	if substrList[0][0] == "E" or substrList[0][0] == "e":
+        encodeList.append('5')
+	if substrList[0][0] == "F" or substrList[0][0] == "f":
+        encodeList.append('6')
+	if substrList[0][0] == "G" or substrList[0][0] == "g":
+        encodeList.append('7')
+	if substrList[0][0] == "H" or substrList[0][0] == "h":
+        encodeList.append('8')
+		
     if int(substrList[0][-2:]):
         encodeList.append(str(categoryTable[int(substrList[0][-2:])-1]).zfill(2))
     
 	
 	#Here we have to manually change the series files
-	encodeList.append(str(encodeRandomList[videoFileList.index(videofile)]).zfill(4))
+	encodeList.append(str(encodeRandomList[generalFileList.index(videofile)]).zfill(4))
     
 	#series data
     sublistCount = len(substrList)
     if (sublistCount == 5):
 		#check if last records is a series work
+		
 		if codeTable[-1] and encodeList[-1]:
 			if (len(codeTable[-1][0].split('-')) == 5):
 				encodeList[-1] = codeTable[-1][1][3:-1]
+				
+		#here must check all situations, for different categories
+		
+		#all swf check if there's fla, swf should behine fla
+		if codeTable[-1] and encodeList[-1]:
+			#check before file's basename
+			currentIndex = generalFileList.index(videofile)
+			if currentIndex != 0:
+				checkBasenameBefore = os.path.splitext(os.path.basename(generalFileList[currentIndex - 1]))[0].strip() 
+				# Same code with different extension
+				if checkBasenameBefore == filebasename:
+					encodeList[-1] = codeTable[-1][1][3:-1]
+					
 		if (substrList[-1] != '' and substrList[-1] != ' ' and substrList[-1].isdigit()):
 			if (int(substrList[-1]) == 1):
 				encodeList.append('a')
@@ -134,7 +147,7 @@ with open(outputFileListPath,'wb') as csvfile:
 
 #Start copy file
 
-for videofile in videoFileList:
+for videofile in generalFileList:
     #get file basename.
     filebasename = os.path.splitext(os.path.basename(videofile))[0].strip()
     extname = os.path.splitext(videofile)[-1].strip()

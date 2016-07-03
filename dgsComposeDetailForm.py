@@ -70,11 +70,14 @@ for xlFile in formFileList:
             wf = pandas.ExcelFile(xlFile)
             ws = wf.parse("作品明细表")
         except:
-            outstr = "Excel文件问题，跳过 %s" % xlFile
-            print outstr
-            logging.warning(outstr)
-            skipCount += 1
-            continue
+			try:
+				ws = wf.parse("Sheet1")
+			except:
+				outstr = "Excel文件问题，检查工作表名称，跳过 %s" % gbk2utf8(xlFile)
+				print outstr
+				logging.warning(outstr)
+				skipCount += 1
+				continue
 
         if ws.empty:
             outstr = ">>>未找到作品明细表 %s<<<" % gbk2utf8(xlFile)
@@ -109,7 +112,7 @@ for xlFile in formFileList:
         for index, row in ws.iterrows():
             if not finishFlag:
                 if not all(pandas.isnull(row.index)) and not row.empty: 
-                    if pandas.isnull(row[0]) or row[0] == "汇总":
+                    if (pandas.isnull(row[1]) and pandas.isnull(row[2])) or row[0] == "汇总":
                         #from this index to the last
                         for c in range(index, ws.shape[0]):
                             droprows.append(c)
@@ -142,12 +145,24 @@ if frames == []:
 
 result = pandas.concat(frames,ignore_index=True)
 
-#reorder the column
-#print result.columns
-important = [u"命题类别",u"命题名称",u"参赛编号",u"作品名称",u"学校"]
-reordered = important + [c for c in result.columns if c not in important]
-#print reordered
-result = result[reordered]
+# #reorder the column
+# #print result.columns
+# important = [u"命题类别",u"命题名称",u"参赛编号",u"作品名称",u"学校"]
+
+# #compose the result column names
+# restColumnNames = []
+# for c in result.columns:
+	# if type(c) == type(''):
+		# if gbk2utf8(c) not in important:
+			# restColumnNames.append(gbk2utf8(c))
+	# else:
+		# restColumnNames.append(c)
+			
+	
+
+# reordered = important + restColumnNames
+# #print reordered
+# result = result[reordered]
 
 writer = pandas.ExcelWriter(outputPath)
 result.to_excel(writer,u"作品明细表")

@@ -73,7 +73,9 @@ for ele in csvtable:
     
 encodeRandomList = random.sample(range(len(generalFileList)), len(generalFileList))
 
-categoryTable = [5,6,1,2,4,3,8,7,10,9,13,12,11,15,14]
+#categoryTable = [5,6,1,2,4,3,8,7,10,9,13,12,11,15,14]
+#Do not reorder 
+categoryTable = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 encodeSeriesCache = ""
 #Now start to check duration
 for videofile in generalFileList:
@@ -183,7 +185,9 @@ for dupCode in dupfilebnList:
                 codeTable[i][1] = encodeChange + codeTable[i][1][-1]
             else:
                 codeTable[i][1] = encodeChange
-    
+
+#only write the ordered and remove repeated records.
+				
 with open(outputFileListPath,'wb') as csvfile:
     csvwriter = csv.writer(csvfile, delimiter=',')
     for value in codeTable:
